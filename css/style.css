@@ -107,6 +107,11 @@ img {
 .hero * {
     z-index: 10;
 }
+
+.cases img:hover {
+    opacity: 0.7;
+}
+
 .hero .navbar{
     z-index: 11;
 }
