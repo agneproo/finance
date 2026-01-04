@@ -1,0 +1,318 @@
+Public Class Form1
+
+    Dim Descrizione() As String
+    Dim Importo() As Double
+    Dim Tipo() As String   ' "Entrata" o "Uscita"
+    Dim dimensione As Integer = 0
+
+    'Variabili globali
+    Dim spesaalta As Double = 0
+    Dim spesabassa As Double = 0
+
+    ' SUB pulizia ListBox
+    Public Sub Pulisci()
+        lstDescrizione.Items.Clear()
+        lstImporti.Items.Clear()
+    End Sub
+
+    ' SUB visualizza dati e calcola totali
+    Public Sub Visualizza()
+        Pulisci()
+
+        Dim totEntrate As Double = 0
+        Dim totUscite As Double = 0
+
+        For i = 0 To dimensione - 1
+            lstDescrizione.Items.Add(Descrizione(i))
+            lstImporti.Items.Add(Importo(i))
+
+            If Tipo(i) = "Entrata" Then
+                totEntrate += Importo(i)
+            Else
+                totUscite += Importo(i)
+            End If
+        Next
+
+        TxtTotEntrate.Text = totEntrate
+        TxtTotUscite.Text = totUscite
+    End Sub
+
+    'SUB aggiungi movimento
+    Public Sub AggiungiMovimento(desc As String, imp As Double, tipoMov As String)
+
+        ReDim Preserve Descrizione(dimensione)
+        ReDim Preserve Importo(dimensione)
+        ReDim Preserve Tipo(dimensione)
+
+        Descrizione(dimensione) = desc
+        Importo(dimensione) = imp
+        Tipo(dimensione) = tipoMov
+
+        dimensione += 1
+    End Sub
+
+    ' AGGIUNGI MOVIMENTO
+    Private Sub AggiungiMovimentoToolStripMenuItem_Click(sender As Object, e As EventArgs)
+
+        ReDim Preserve Descrizione(dimensione)
+        ReDim Preserve Importo(dimensione)
+        ReDim Preserve Tipo(dimensione)
+
+        ' Tipo movimento
+        If RbEntrata.Checked Then
+            Tipo(dimensione) = "Entrata"
+        ElseIf RbUscita.Checked Then
+            Tipo(dimensione) = "Uscita"
+        Else
+            MsgBox("Seleziona Entrata o Uscita.")
+            Exit Sub
+        End If
+
+        ' Inserimento descrizione
+        Dim descr As String
+        descr = InputBox("Inserisci la descrizione del movimento")
+        Do While descr = ""
+            MsgBox("Descrizione non valida.")
+            descr = InputBox("Inserisci la descrizione del movimento")
+        Loop
+        Descrizione(dimensione) = descr
+        lstDescrizione.Items.Add(Descrizione(dimensione))
+
+        ' Inserimento importo
+        Dim Imp As Double
+        Dim testo As String
+
+        Do
+            testo = InputBox("Inserisci l'importo (diverso da 0)")
+
+            If Not IsNumeric(testo) Then
+                MsgBox("Devi inserire un numero.")
+            Else
+                Imp = testo
+
+                If Imp = 0 Then
+                    MsgBox("L'importo non può essere zero.")
+                End If
+            End If
+
+        Loop Until IsNumeric(testo) And Imp <> 0
+
+        Importo(dimensione) = Imp
+        lstImporti.Items.Add(Imp)
+
+
+        'Dim Imp As Double
+        'Dim Im As Double
+        'Do
+        '    Imp = InputBox("Inserisci l'importo (diverso da 0)")
+        '    If Not Double.TryParse(Imp, Im) OrElse Imp = 0 Then
+        '        MsgBox("Importo non valido.")
+        '    End If
+        'Loop Until Double.TryParse(Imp, Im) AndAlso Imp <> 0
+        'Importo(dimensione) = Imp
+        'lstImporti.Items.Add(Importo(dimensione))
+
+
+        dimensione += 1
+        Visualizza()
+
+    End Sub
+
+    ' FILTRA PER DESCRIZIONE
+    Private Sub FiltraToolStripMenuItem_Click(sender As Object, e As EventArgs)
+
+        Dim valore As String
+        valore = InputBox("Inserisci la descrizione da cercare")
+
+        Dim trovato = False
+        Pulisci()
+
+        For i = 0 To dimensione - 1
+            If Descrizione(i) = valore Then
+                lstDescrizione.Items.Add(Descrizione(i))
+                lstImporti.Items.Add(Importo(i))
+                trovato = True
+            End If
+        Next
+
+        If trovato = False Then
+            MsgBox("Movimento NON trovato.")
+        End If
+
+    End Sub
+
+    'SUB spesa + alta
+    Public Sub SpesapiuAlta()
+        If dimensione = 0 Then
+            MsgBox("Nessun movimento inserito.")
+            Exit Sub
+        End If
+
+        spesaalta = Importo(0)
+
+        For i = 1 To dimensione - 1
+            If Importo(i) > spesaalta Then
+                spesaalta = Importo(i)
+            End If
+        Next
+
+        TxtSpesaAlta.Text = spesaalta
+
+    End Sub
+
+    'SUB spesa + bassa
+    Public Sub SpesapiuBassa()
+
+        If dimensione = 0 Then
+            MsgBox("Nessun movimento inserito.")
+            Exit Sub
+        End If
+
+        spesabassa = Importo(0)
+
+        For i = 1 To dimensione - 1
+            If Importo(i) < spesabassa Then
+                spesabassa = Importo(i)
+            End If
+        Next
+
+        TxtSpesaBassa.Text = spesabassa
+    End Sub
+
+    'SUB ordina crescente
+    Public Sub OrdinaPerImportoCrescente()
+
+        If dimensione <= 1 Then
+            MsgBox("Non ci sono abbastanza movimenti da ordinare.")
+            Exit Sub
+        End If
+
+        ' Crea copie ridimensionate
+        Dim imp(dimensione - 1) As Double
+        Dim desc(dimensione - 1) As String
+        Dim tip(dimensione - 1) As String
+
+        For i = 0 To dimensione - 1
+            imp(i) = Importo(i)
+            desc(i) = Descrizione(i)
+            tip(i) = Tipo(i)
+        Next
+
+        ' Ordina in base all'importo
+        Array.Sort(imp, desc)
+        Array.Sort(imp, tip)
+
+        ' Riporta i dati negli array originali
+        For i = 0 To dimensione - 1
+            Importo(i) = imp(i)
+            Descrizione(i) = desc(i)
+            Tipo(i) = tip(i)
+        Next
+
+        Visualizza()
+        MsgBox("Movimenti ordinati per importo (crescente).")
+
+    End Sub
+
+    ' SUB ordina decrescente
+    Public Sub OrdinaPerImportoDecrescente()
+        OrdinaPerImportoCrescente()
+
+        Array.Reverse(Importo)
+        Array.Reverse(Descrizione)
+        Array.Reverse(Tipo)
+
+        Visualizza()
+        MsgBox("Movimenti ordinati per importo (decrescente).")
+    End Sub
+
+    ' SPESA PIU ALTA
+    Private Sub SpesaPiùAltaToolStripMenuItem_Click(sender As Object, e As EventArgs)
+        SpesapiuAlta()
+    End Sub
+
+    ' SPESA PIU BASSA
+    Private Sub SpesaPiùBassaToolStripMenuItem_Click(sender As Object, e As EventArgs)
+        SpesapiuBassa()
+    End Sub
+
+    ' POPOLA
+    Private Sub PopolaToolStripMenuItem_Click(sender As Object, e As EventArgs)
+
+        AggiungiMovimento("Stipendio", 1200, "Entrata")
+        AggiungiMovimento("Affitto", 500, "Uscita")
+        AggiungiMovimento("Spesa", 80, "Uscita")
+        AggiungiMovimento("Regalo", 150, "Entrata")
+
+        Visualizza()
+
+    End Sub
+
+    ' ORDINA PER IMPORTO CRESCENTE
+    Private Sub CrescenteToolStripMenuItem_Click(sender As Object, e As EventArgs)
+        OrdinaPerImportoCrescente()
+    End Sub
+
+    ' ORDINA PER IMPORTO DECRESCENTE
+    Private Sub DecrescenteToolStripMenuItem_Click(sender As Object, e As EventArgs)
+        OrdinaPerImportoDecrescente()
+    End Sub
+
+    ' CORREGGI
+    Private Sub CorreggiToolStripMenuItem1_Click(sender As Object, e As EventArgs)
+        If dimensione = 0 Then
+            MsgBox("Non ci sono movimenti da correggere.")
+            Exit Sub
+        End If
+
+        Dim pos As Integer
+        pos = InputBox("Inserisci il numero del movimento da correggere (da 1 a " & dimensione & ")")
+
+        If pos < 1 Or pos > dimensione Then
+            MsgBox("Numero non valido.")
+            Exit Sub
+        End If
+
+        pos = pos - 1   ' indice array
+
+        ' Nuova descrizione
+        Dim nuovaDesc As String
+        nuovaDesc = InputBox("Nuova descrizione", , Descrizione(pos))
+
+        If nuovaDesc = "" Then
+            MsgBox("Descrizione non valida.")
+            Exit Sub
+        End If
+
+        ' Nuovo importo
+        Dim nuovoImp As Double
+        nuovoImp = InputBox("Nuovo importo", , Importo(pos))
+
+        If nuovoImp = 0 Then
+            MsgBox("Importo non valido.")
+            Exit Sub
+        End If
+
+        ' Aggiorna i dati
+        Descrizione(pos) = nuovaDesc
+        Importo(pos) = nuovoImp
+
+        Visualizza()
+        MsgBox("Movimento corretto.")
+    End Sub
+
+    ' PULISCI
+    Private Sub PulisciToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles PulisciToolStripMenuItem.Click
+        Pulisci()
+        TxtSpesaAlta.Text = 0
+        TxtSpesaBassa.Text = 0
+        TxtTotEntrate.Text = 0
+        TxtTotUscite.Text = 0
+    End Sub
+
+    'END
+    Private Sub EsciToolStripMenuItem2_Click(sender As Object, e As EventArgs)
+        End
+    End Sub
+
+End Class
